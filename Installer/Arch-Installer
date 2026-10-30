@@ -1,0 +1,9 @@
+#!/bin/bash
+
+#1. Get user input
+	#Determine what variables are needed
+		#Hostname
+		#IP address
+		#Disk partitions
+	
+#2. 
