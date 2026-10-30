@@ -1,2 +1,3 @@
 # Arch-Linux-Manager
-Manager to handle Arch Linux installation
+Tired of installing Arch Linux? This manager is designed to handle installation process for you
+***WIP***
