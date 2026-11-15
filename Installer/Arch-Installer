@@ -4,52 +4,135 @@
 # This script can be run by executing the following:
 #   curl -sL https://ba.sh/UbXL | bash
 
-set -euxo pipefail 
+set -Eeuo pipefail 
 #"set -uo pipefail" after debugging
 
-trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' INT
-
+trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
 welcome(){ 
 	dialog --backtitle "Arch Installer Manager" \
 	--title "Welcome" \
 	--msgbox "Welcome to the Arch Installer Manager!" 0 0
 }
-welcome
-
 
 get_hostname(){ 
 	local hostname
 	local regex='^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$'
 
 	while true; do
-	hostname=$(dialog --backtitle "Arch Installer Manager" \
-	--title "Hostname" \
-	--inputbox "Please type the hostname: " 0 0 \
-	--stdout) || { clear; exit 1; }
+		hostname=$(dialog --backtitle "Arch Installer Manager" \
+		--title "Hostname" \
+		--inputbox "Please type the hostname" 0 0 \
+		--stdout) || { clear; exit 1; }
 
-	if [[ $hostname =~ $regex ]]; then
-		HOSTNAME_USER_INPUT=$hostname
-		break
-	fi
+		if [[ $hostname =~ $regex ]]; then #regular expression comparator ie az1-9
+			HOSTNAME_USER_INPUT=$hostname 
+			break
+		fi
 
-	dialog --backtitle "Arch Installer Manager" \
-	--title "Invalid Hostname" \
-	--msgbox "Hostnames can only contain letters a through z, digits 0 through 9 and the hyphen-minus character ('-'). It cannot start or end with a hyphen. It may not be longer than 63 characters." 0 0 
-	
+		dialog --backtitle "Arch Installer Manager" \
+		--title "Invalid Hostname" \
+		--msgbox "Hostnames can only contain letters a through z, A through Z, digits 0 through 9 and the hyphen-minus character ('-'). It cannot start or end with a hyphen. It may not be longer than 63 characters." 0 0 
+		
 	done
 }
-get_hostname
+
+get_login(){
+	local root_password
+	local root_confirm
+	local user_name
+	local user_password
+	local regex='^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$'
+
+	while true; do
+		root_password=$(dialog --stdout --backtitle "Arch Installer Manager" \
+		--title "Root Password" --insecure \
+		--passwordbox "Please type the root password: " 0 0) || { clear; exit 1; }
+
+		if [[ -z "$root_password" ]]; then 
+			dialog --backtitle "Arch Installer Manager" \
+			--title "Invalid Password" \
+			--msgbox "Password cannot be blank. Please enter a password." 0 0 
+			continue
+		fi	
+
+		root_confirm=$(dialog --stdout --backtitle "Arch Installer Manager" \
+		--title "Confirm Root Password" --insecure \
+		--passwordbox "Please type the root password again: " 0 0) || { clear; exit 1; }
+
+		if [[ "$root_password" == "$root_confirm" ]]; then
+			ROOT_PASSWORD_USER_INPUT=$root_password
+			continue
+		else
+			dialog --backtitle "Arch Installer Manager" \
+			--title "Incorrect Password" \
+			--msgbox "Password does not match. Please try again" 0 0 
+		fi
+#----------	
+		username=$(dialog --backtitle "Arch Installer Manager" \
+		--title "Username" \
+		--inputbox "Please type the username" 0 0 \
+		--stdout) || { clear; exit 1; }
+
+		if [[ $username =~ $regex ]]; then #regular expression comparator ie az1-9
+			USERNAME_USER_INPUT=$username 
+			continue
+		else
+			dialog --backtitle "Arch Installer Manager" \
+			--title "Invalid Username" \
+			--msgbox "Usernames can only contain letters a through z, A through Z, digits 0 through 9 and the hyphen-minus character ('-'). It cannot start or end with a hyphen. It may not be longer than 63 characters." 0 0 
+		fi			
+			
+		user_password=$(dialog --stdout --backtitle "Arch Installer Manager" \
+		--title "User Password" --insecure \
+		--passwordbox "Please type the user password: " 0 0) || { clear; exit 1; }
+
+		if [[ -z "$user_password" ]]; then 
+			dialog --backtitle "Arch Installer Manager" \
+			--title "Invalid Password" \
+			--msgbox "Password cannot be blank. Please enter a password." 0 0 
+			continue
+		fi
+		user_confirm=$(dialog --stdout --backtitle "Arch Installer Manager" \
+		--title "Confirm User Password" --insecure \
+		--passwordbox "Please type the user password again: " 0 0) || { clear; exit 1; }
+
+		if [[ "$root_password" == "$user_confirm" ]]; then
+			USER_PASSWORD_USER_INPUT=$user_password
+			break
+		else
+			dialog --backtitle "Arch Installer Manager" \
+			--title "Incorrect Password" \
+			--msgbox "Password does not match. Please try again" 0 0 
+		fi
+
+	done
+}
 
 test(){ 
 	dialog --backtitle "test" \
 	--title "test" \
 	--msgbox "test" 0 0
 }
-test
 
-#echo "$HOSTNAME_USER_INPUT"
+main(){
+	welcome
+	#get_hostname
+	#echo "$HOSTNAME_USER_INPUT"
+	get_login
+	test
+}
 
+main
+
+#1. Get user input 	
+	#Determine what variables are needed
+		#Hostname
+		#Root Password
+		#Username
+		#Password
+		#IP address
+		#Country Code
 #1. Get user input 	
 	#Determine what variables are needed
 		#Hostname
@@ -64,7 +147,13 @@ test
 	#Choose Type
 	#EFI
 	#BTFS
+	#swap partition
 
 #3. Select Timezone
 #4. Select Locale
+
+
+
+
+
 
