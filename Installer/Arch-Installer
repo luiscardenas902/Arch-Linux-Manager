@@ -1,9 +1,70 @@
 #!/bin/bash
 
-#1. Get user input
+# WARNING: this script will destroy data on the selected disk.
+# This script can be run by executing the following:
+#   curl -sL https://ba.sh/UbXL | bash
+
+set -euxo pipefail 
+#"set -uo pipefail" after debugging
+
+trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' INT
+
+
+welcome(){ 
+	dialog --backtitle "Arch Installer Manager" \
+	--title "Welcome" \
+	--msgbox "Welcome to the Arch Installer Manager!" 0 0
+}
+welcome
+
+
+get_hostname(){ 
+	local hostname
+	local regex='^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$'
+
+	while true; do
+	hostname=$(dialog --backtitle "Arch Installer Manager" \
+	--title "Hostname" \
+	--inputbox "Please type the hostname: " 0 0 \
+	--stdout) || { clear; exit 1; }
+
+	if [[ $hostname =~ $regex ]]; then
+		HOSTNAME_USER_INPUT=$hostname
+		break
+	fi
+
+	dialog --backtitle "Arch Installer Manager" \
+	--title "Invalid Hostname" \
+	--msgbox "Hostnames can only contain letters a through z, digits 0 through 9 and the hyphen-minus character ('-'). It cannot start or end with a hyphen. It may not be longer than 63 characters." 0 0 
+	
+	done
+}
+get_hostname
+
+test(){ 
+	dialog --backtitle "test" \
+	--title "test" \
+	--msgbox "test" 0 0
+}
+test
+
+#echo "$HOSTNAME_USER_INPUT"
+
+#1. Get user input 	
 	#Determine what variables are needed
 		#Hostname
+		#Root Password
+		#Username
+		#Password
 		#IP address
-		#Disk partitions
+		#Country Code for Keymap
+		
 	
-#2. 
+#2. Disk Partition
+	#Choose Type
+	#EFI
+	#BTFS
+
+#3. Select Timezone
+#4. Select Locale
+
