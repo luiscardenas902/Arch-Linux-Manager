@@ -9,8 +9,10 @@ set -Eeuo pipefail
 
 trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 
+ARCH_BACKTITLE="Arch Installation Manager"
+
 welcome(){ 
-	dialog --backtitle "Arch Installer Manager" \
+	dialog --backtitle "$ARCH_BACKTITLE" \
 	--title "Welcome" \
 	--msgbox "Welcome to the Arch Installer Manager!" 0 0
 }
@@ -20,17 +22,17 @@ get_hostname(){
 	local regex='^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$'
 
 	while true; do
-		hostname=$(dialog --backtitle "Arch Installer Manager" \
+		hostname=$(dialog --backtitle "$ARCH_BACKTITLE" \
 		--title "Hostname" \
 		--inputbox "Please type the hostname" 0 0 \
 		--stdout) || { clear; exit 1; }
 
-		if [[ $hostname =~ $regex ]]; then #regular expression comparator ie az1-9
+		if [[ $hostname =~ $regex ]]; then #regular expression comparator ie az1-a
 			HOSTNAME_USER_INPUT=$hostname 
 			break
 		fi
 
-		dialog --backtitle "Arch Installer Manager" \
+		dialog --backtitle "$ARCH_BACKTITLE" \
 		--title "Invalid Hostname" \
 		--msgbox "Hostnames can only contain letters a through z, A through Z, digits 0 through 9 and the hyphen-minus character ('-'). It cannot start or end with a hyphen. It may not be longer than 63 characters." 0 0 
 		
@@ -45,81 +47,342 @@ get_login(){
 	local regex='^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$'
 
 	while true; do
-		root_password=$(dialog --stdout --backtitle "Arch Installer Manager" \
+		root_password=$(dialog --stdout --backtitle "$ARCH_BACKTITLE" \
 		--title "Root Password" --insecure \
 		--passwordbox "Please type the root password: " 0 0) || { clear; exit 1; }
 
 		if [[ -z "$root_password" ]]; then 
-			dialog --backtitle "Arch Installer Manager" \
+			dialog --backtitle "$ARCH_BACKTITLE" \
 			--title "Invalid Password" \
 			--msgbox "Password cannot be blank. Please enter a password." 0 0 
-			continue
 		fi	
 
-		root_confirm=$(dialog --stdout --backtitle "Arch Installer Manager" \
+		root_confirm=$(dialog --stdout --backtitle "$ARCH_BACKTITLE" \
 		--title "Confirm Root Password" --insecure \
 		--passwordbox "Please type the root password again: " 0 0) || { clear; exit 1; }
 
-		if [[ "$root_password" == "$root_confirm" ]]; then
+		if [[ $root_password == $root_confirm ]]; then
 			ROOT_PASSWORD_USER_INPUT=$root_password
-			continue
+			break
 		else
-			dialog --backtitle "Arch Installer Manager" \
+			dialog --backtitle "$ARCH_BACKTITLE" \
 			--title "Incorrect Password" \
 			--msgbox "Password does not match. Please try again" 0 0 
 		fi
-#----------	
-		username=$(dialog --backtitle "Arch Installer Manager" \
-		--title "Username" \
-		--inputbox "Please type the username" 0 0 \
-		--stdout) || { clear; exit 1; }
+	done
+
+	username=$(dialog --backtitle "$ARCH_BACKTITLE" \
+	--title "Username" \
+	--inputbox "Please type the username" 0 0 \
+	--stdout) || { clear; exit 1; }
+
+	while true; do
 
 		if [[ $username =~ $regex ]]; then #regular expression comparator ie az1-9
 			USERNAME_USER_INPUT=$username 
-			continue
 		else
-			dialog --backtitle "Arch Installer Manager" \
+			dialog --backtitle "$ARCH_BACKTITLE" \
 			--title "Invalid Username" \
-			--msgbox "Usernames can only contain letters a through z, A through Z, digits 0 through 9 and the hyphen-minus character ('-'). It cannot start or end with a hyphen. It may not be longer than 63 characters." 0 0 
+			--msgbox "Usernames can only contain letters a through z, A through Z, digits 0 through 9 and the hyphen-minus character ('-'). They	 cannot start or end with a hyphen. It may not be longer than 63 characters." 0 0 
 		fi			
 			
-		user_password=$(dialog --stdout --backtitle "Arch Installer Manager" \
+		user_password=$(dialog --stdout --backtitle "$ARCH_BACKTITLE" \
 		--title "User Password" --insecure \
-		--passwordbox "Please type the user password: " 0 0) || { clear; exit 1; }
+		--passwordbox "Please type the user's password: " 0 0) || { clear; exit 1; }
 
 		if [[ -z "$user_password" ]]; then 
-			dialog --backtitle "Arch Installer Manager" \
+			dialog --backtitle "$ARCH_BACKTITLE" \
 			--title "Invalid Password" \
 			--msgbox "Password cannot be blank. Please enter a password." 0 0 
-			continue
 		fi
-		user_confirm=$(dialog --stdout --backtitle "Arch Installer Manager" \
+
+		user_confirm=$(dialog --stdout --backtitle "$ARCH_BACKTITLE" \
 		--title "Confirm User Password" --insecure \
 		--passwordbox "Please type the user password again: " 0 0) || { clear; exit 1; }
 
-		if [[ "$root_password" == "$user_confirm" ]]; then
+		if [[ $user_password == $user_confirm ]]; then
 			USER_PASSWORD_USER_INPUT=$user_password
 			break
 		else
-			dialog --backtitle "Arch Installer Manager" \
+			dialog --backtitle "$ARCH_BACKTITLE" \
 			--title "Incorrect Password" \
 			--msgbox "Password does not match. Please try again" 0 0 
 		fi
-
 	done
 }
 
+#get_ip
+# Syntax: dialog --radiolist <text> <height> <width> <list-height> <tag> <item> <status>
+get_country_code(){
+		dialog --backtitle "$ARCH_BACKTITLE" \
+		--title "Country Code" \
+		--radiolist "Choose one (1) option:" 0 0 0 \
+		1 "Afghanistan (AF)" on \
+		2 "Åland Islands (AX)" off \
+		3 "Albania (AL)" off \
+		4 "Algeria (DZ)" off \
+		5 "American Samoa (AS)" off \
+		6 "Andorra (AD)" off \
+		7 "Angola (AO)" off \
+		8 "Anguilla (AI)" off \
+		9 "Antarctica (AQ)" off \
+		10 "Antigua & Barbuda (AG)" off \
+		11 "Argentina (AR)" off \
+		12 "Armenia (AM)" off \
+		13 "Aruba (AW)" off \
+		14 "Australia (AU)" off \
+		15 "Austria (AT)" off \
+		16 "Azerbaijan (AZ)" off \
+		17 "Bahamas (BS)" off \
+		18 "Bahrain (BH)" off \
+		19 "Bangladesh (BD)" off \
+		20 "Barbados (BB)" off \
+		21 "Belarus (BY)" off \
+		22 "Belgium (BE)" off \
+		23 "Belize (BZ)" off \
+		24 "Benin (BJ)" off \
+		25 "Bermuda (BM)" off \
+		26 "Bhutan (BT)" off \
+		27 "Bolivia (BO)" off \
+		28 "Bosnia & Herzegovina (BA)" off \
+		29 "Botswana (BW)" off \
+		30 "Bouvet Island (BV)" off \
+		31 "Brazil (BR)" off \
+		32 "British Indian Ocean Territory (IO)" off \
+		33 "British Virgin Islands (VG)" off \
+		34 "Brunei (BN)" off \
+		35 "Bulgaria (BG)" off \
+		36 "Burkina Faso (BF)" off \
+		37 "Burundi (BI)" off \
+		38 "Cambodia (KH)" off \
+		39 "Cameroon (CM)" off \
+		40 "Canada (CA)" off \
+		41 "Cape Verde (CV)" off \
+		42 "Caribbean Netherlands (BQ)" off \
+		43 "Cayman Islands (KY)" off \
+		44 "Central African Republic (CF)" off \
+		45 "Chad (TD)" off \
+		46 "Chile (CL)" off \
+		47 "China (CN)" off \
+		48 "Christmas Island (CX)" off \
+		49 "Cocos (Keeling) Islands (CC)" off \
+		50 "Colombia (CO)" off \
+		51 "Comoros (KM)" off \
+		52 "Congo - Brazzaville (CG)" off \
+		53 "Congo - Kinshasa (CD)" off \
+		54 "Cook Islands (CK)" off \
+		55 "Costa Rica (CR)" off \
+		56 "Côte dIvoire (CI)" off \
+		57 "Croatia (HR)" off \
+		58 "Cuba (CU)" off \
+		59 "Curaçao (CW)" off \
+		60 "Cyprus (CY)" off \
+		61 "Czechia (CZ)" off \
+		62 "Denmark (DK)" off \
+		63 "Djibouti (DJ)" off \
+		64 "Dominica (DM)" off \
+		65 "Dominican Republic (DO)" off \
+		66 "Ecuador (EC)" off \
+		67 "Egypt (EG)" off \
+		68 "El Salvador (SV)" off \
+		69 "Equatorial Guinea (GQ)" off \
+		70 "Eritrea (ER)" off \
+		71 "Estonia (EE)" off \
+		72 "Eswatini (SZ)" off \
+		73 "Ethiopia (ET)" off \
+		74 "Falkland Islands (FK)" off \
+		75 "Faroe Islands (FO)" off \
+		76 "Fiji (FJ)" off \
+		77 "Finland (FI)" off \
+		78 "France (FR)" off \
+		79 "French Guiana (GF)" off \
+		80 "French Polynesia (PF)" off \
+		81 "French Southern Territories (TF)" off \
+		82 "Gabon (GA)" off \
+		83 "Gambia (GM)" off \
+		84 "Georgia (GE)" off \
+		85 "Germany (DE)" off \
+		86 "Ghana (GH)" off \
+		87 "Gibraltar (GI)" off \
+		88 "Greece (GR)" off \
+		89 "Greenland (GL)" off \
+		90 "Grenada (GD)" off \
+		91 "Guadeloupe (GP)" off \
+		92 "Guam (GU)" off \
+		93 "Guatemala (GT)" off \
+		94 "Guernsey (GG)" off \
+		95 "Guinea (GN)" off \
+		96 "Guinea-Bissau (GW)" off \
+		97 "Guyana (GY)" off \
+		98 "Haiti (HT)" off \
+		99 "Heard & McDonald Islands (HM)" off \
+		100 "Honduras (HN)" off \
+		101 "Hong Kong SAR China (HK)" off \
+		102 "Hungary (HU)" off \
+		103 "Iceland (IS)" off \
+		104 "India (IN)" off \
+		105 "Indonesia (ID)" off \
+		106 "Iran (IR)" off \
+		107 "Iraq (IQ)" off \
+		108 "Ireland (IE)" off \
+		109 "Isle of Man (IM)" off \
+		110 "Israel (IL)" off \
+		111 "Italy (IT)" off \
+		112 "Jamaica (JM)" off \
+		113 "Japan (JP)" off \
+		114 "Jersey (JE)" off \
+		115 "Jordan (JO)" off \
+		116 "Kazakhstan (KZ)" off \
+		117 "Kenya (KE)" off \
+		118 "Kiribati (KI)" off \
+		119 "Kuwait (KW)" off \
+		120 "Kyrgyzstan (KG)" off \
+		121 "Laos (LA)" off \
+		122 "Latvia (LV)" off \
+		123 "Lebanon (LB)" off \
+		124 "Lesotho (LS)" off \
+		125 "Liberia (LR)" off \
+		126 "Libya (LY)" off \
+		127 "Liechtenstein (LI)" off \
+		128 "Lithuania (LT)" off \
+		129 "Luxembourg (LU)" off \
+		130 "Macao SAR China (MO)" off \
+		131 "Madagascar (MG)" off \
+		132 "Malawi (MW)" off \
+		133 "Malaysia (MY)" off \
+		134 "Maldives (MV)" off \
+		135 "Mali (ML)" off \
+		136 "Malta (MT)" off \
+		137 "Marshall Islands (MH)" off \
+		138 "Martinique (MQ)" off \
+		139 "Mauritania (MR)" off \
+		140 "Mauritius (MU)" off \
+		141 "Mayotte (YT)" off \
+		142 "Mexico (MX)" off \
+		143 "Micronesia (FM)" off \
+		144 "Moldova (MD)" off \
+		145 "Monaco (MC)" off \
+		146 "Mongolia (MN)" off \
+		147 "Montenegro (ME)" off \
+		148 "Montserrat (MS)" off \
+		149 "Morocco (MA)" off \
+		150 "Mozambique (MZ)" off \
+		151 "Myanmar (Burma) (MM)" off \
+		152 "Namibia (NA)" off \
+		153 "Nauru (NR)" off \
+		154 "Nepal (NP)" off \
+		155 "Netherlands (NL)" off \
+		156 "New Caledonia (NC)" off \
+		157 "New Zealand (NZ)" off \
+		158 "Nicaragua (NI)" off \
+		159 "Niger (NE)" off \
+		160 "Nigeria (NG)" off \
+		161 "Niue (NU)" off \
+		162 "Norfolk Island (NF)" off \
+		163 "North Korea (KP)" off \
+		164 "North Macedonia (MK)" off \
+		165 "Northern Mariana Islands (MP)" off \
+		166 "Norway (NO)" off \
+		167 "Oman (OM)" off \
+		168 "Pakistan (PK)" off \
+		169 "Palau (PW)" off \
+		170 "Palestinian Territories (PS)" off \
+		171 "Panama (PA)" off \
+		172 "Papua New Guinea (PG)" off \
+		173 "Paraguay (PY)" off \
+		174 "Peru (PE)" off \
+		175 "Philippines (PH)" off \
+		176 "Pitcairn Islands (PN)" off \
+		177 "Poland (PL)" off \
+		178 "Portugal (PT)" off \
+		179 "Puerto Rico (PR)" off \
+		180 "Qatar (QA)" off \
+		181 "Réunion (RE)" off \
+		182 "Romania (RO)" off \
+		183 "Russia (RU)" off \
+		184 "Rwanda (RW)" off \
+		185 "Samoa (WS)" off \
+		186 "San Marino (SM)" off \
+		187 "São Tomé & Príncipe (ST)" off \
+		188 "Saudi Arabia (SA)" off \
+		189 "Senegal (SN)" off \
+		190 "Serbia		  || { clear; exit 1; } (RS)" off \
+		191 "Seychelles (SC)" off \
+		192 "Sierra Leone (SL)" off \
+		193 "Singapore (SG)" off \
+		194 "Sint Maarten (SX)" off \
+		195 "Slovakia (SK)" off \
+		196 "Slovenia (SI)" off \
+		197 "Solomon Islands (SB)" off \
+		198 "Somalia (SO)" off \
+		199 "South Africa (ZA)" off \
+		200 "South Georgia & South Sandwich Islands (GS)" off \
+		201 "South Korea (KR)" off \
+		202 "South Sudan (SS)" off \
+		203 "Spain (ES)" off \
+		204 "Sri Lanka (LK)" off \
+		205 "St. Barthélemy (BL)" off \
+		206 "St. Helena (SH)" off \
+		207 "St. Kitts & Nevis (KN)" off \
+		208 "St. Lucia (LC)" off \
+		209 "St. Martin (MF)" off \
+		210 "St. Pierre & Miquelon (PM)" off \
+		211 "St. Vincent & Grenadines (VC)" off \
+		212 "Sudan (SD)" off \
+		213 "Suriname (SR)" off \
+		214 "Svalbard & Jan Mayen (SJ)" off \
+		215 "Sweden (SE)" off \
+		216 "Switzerland (CH)" off \
+		217 "Syria (SY)" off \
+		218 "Taiwan (TW)" off \
+		219 "Tajikistan (TJ)" off \	
+		220 "Tanzania (TZ)" off \
+		221 "Thailand (TH)" off \
+		222 "Timor-Leste (TL)" off \
+		223 "Togo (TG)" off \
+		224 "Tokelau (TK)" off \
+		225 "Tonga (TO)" off \
+		226 "Trinidad & Tobago (TT)" off \
+		227 "Tunisia (TN)" off \
+		228 "Turkey (TR)" off \
+		229 "Turkmenistan (TM)" off \
+		230 "Turks & Caicos Islands (TC)" off \
+		231 "Tuvalu (TV)" off \
+		232 "U.S. Outlying Islands (UM)" off \
+		233 "U.S. Virgin Islands (VI)" off \
+		234 "Uganda (UG)" off \
+		235 "Ukraine (UA)" off \
+		236 "United Arab Emirates (AE)" off \
+		237 "United Kingdom (GB)" off \
+		238 "United States (US)" off \
+		239 "Uruguay (UY)" off \
+		240 "Uzbekistan (UZ)" off \
+		241 "Vanuatu (VU)" off \
+		242 "Vatican City (VA)" off \
+		243 "Venezuela (VE)" off \
+		244 "Vietnam (VN)" off \
+		245 "Wallis & Futuna (WF)" off \
+		246 "Western Sahara (EH)" off \
+		247 "Yemen (YE)" off \
+		248 "Zambia (ZM)" off \
+		249 "Zimbabwe (ZW)" off 
+}
+
 test(){ 
-	dialog --backtitle "test" \
+	dialog --backtitle "$ARCH_BACKTITLE" \
 	--title "test" \
 	--msgbox "test" 0 0
 }
+
+
 
 main(){
 	welcome
 	#get_hostname
 	#echo "$HOSTNAME_USER_INPUT"
-	get_login
+	#get_login
+	#get_ip
+	get_country_code
 	test
 }
 
